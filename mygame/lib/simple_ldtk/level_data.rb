@@ -57,18 +57,30 @@ module SimpleLdtk
     end
 
     #
+    # Returns all cells for the given grid.
+    def all_cells_for(grid_name)
+      int_grid(grid_name)
+    end
+
+    #
+    # Returns the triggered cell
+    # Use this method if you need to do something with the triggered cell.
+    def intersected_cell(rect, grid_name:)
+      all_cells_for(grid_name).find do |cell|
+        rect.intersect_rect?(cell)
+      end
+    end
+
+    #
     # Returns all cells of the given type for the given grid.
     # example: cells_for(:collisions, :solid) will return all solid collision cells for the collisions grid.
-    #
-    # We probably don't need to memoize this into a registry unless we see use cases where
-    # we're calling the same grid/type combination multiple times.
-    def cells_for(grid_name, type)
-      int_grid(grid_name).select { |cell| cell[:type] == type }
+    def cells_for_type(grid_name, type)
+      all_cells_for(grid_name).select { |cell| cell[:type] == type }
     end
 
     # Quick and dirty collision detection
-    def collides?(rect, grid_name: 'Collisions', type: :solid)
-      cells_for(grid_name, type).any? do |cell|
+    def collides?(rect, grid_name:, type:)
+      cells_for_type(grid_name, type).any? do |cell|
         rect.intersect_rect?(cell)
       end
     end

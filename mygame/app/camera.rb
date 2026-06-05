@@ -84,7 +84,7 @@ class Camera
   # Keeps the camera viewport inside the world bounds
   # The max calls handle maps smaller than the current camera viewport
   def clamp_to_world(world)
-    @x = @x.clamp(0, [world.width - source_w, 0].max)
-    @y = @y.clamp(0, [world.height - source_h, 0].max)
+    @x = @x.clamp(0, [world.width - source_w, 0].max).lerp(0, 0.25)
+    @y = @y.clamp(0, [world.height - source_h, 0].max).lerp(0, 0.25)
   end
 end

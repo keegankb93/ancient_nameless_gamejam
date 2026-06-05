@@ -1,42 +1,106 @@
+require 'lib/animatable'
+
 class Player
+  include Animatable
+
   attr_sprite
 
-  def initialize(x:, y:, w:, h:, path: :solid, r: 0, g: 0, b: 255)
+  define_animations(tile_w: 16, tile_h: 16) do
+    folder('sprites/characters/player') do
+      anim :idle_up,   frames: 1, hold_for: 1
+      anim :idle_down, frames: 1, hold_for: 1
+      anim :idle_side, frames: 1, hold_for: 1
+      anim :walk_up,   frames: 4, hold_for: 20, start_frame: 1
+      anim :walk_down, frames: 4, hold_for: 20, start_frame: 1
+      anim :walk_side, frames: 4, hold_for: 20, start_frame: 1
+    end
+  end
+
+  def initialize(x:, y:, w:, h:)
     @x = x
     @y = y
     @w = w
     @h = h
-    @path = path
-    @r = r
-    @g = g
-    @b = b
+
+    @facing = :down
+    @side_direction = 1
+
+    play_animation(:idle_down)
   end
 
   def tick(args)
-    direction = args.inputs.directional_angle
-    return unless direction
+    dx = 0
+    dy = 0
 
-    dx = direction.vector_x * 2
-    dy = direction.vector_y * 2
+    dx += 1 if args.inputs.keyboard.right
+    dx -= 1 if args.inputs.keyboard.left
+    dy += 1 if args.inputs.keyboard.up
+    dy -= 1 if args.inputs.keyboard.down
+
+    unless dx != 0 || dy != 0
+      play_animation(:"idle_#{@facing}")
+
+      return
+    end
+
+    update_facing(dx, dy)
+    play_animation(:"walk_#{@facing}")
+
+    speed = 1
     level = $game.level
 
-    move_x(dx, level)
-    move_y(dy, level)
+    move_x(dx * speed, level)
+    move_y(dy * speed, level)
 
     @x = @x.clamp(0, level.width - @w)
     @y = @y.clamp(0, level.height - @h)
+
+    check_triggers(level)
+  end
+
+  def flip_animation?
+    @facing == :side && @side_direction.negative?
   end
 
   private
 
+  def update_facing(dx, dy)
+    if dx != 0
+      @facing = :side
+      @side_direction = dx
+    elsif dy.positive?
+      @facing = :up
+    elsif dy.negative?
+      @facing = :down
+    end
+  end
+
+  # TODO: Clean up this class and the level arg
+
   def move_x(dx, level)
     next_rect = rect_at(x: @x + dx, y: @y)
-    @x += dx unless level.collides?(next_rect)
+
+    @x += dx if can_move?(next_rect, level)
   end
 
   def move_y(dy, level)
     next_rect = rect_at(x: @x, y: @y + dy)
-    @y += dy unless level.collides?(next_rect)
+
+    @y += dy if can_move?(next_rect, level)
+  end
+
+  def check_triggers(level)
+    cell = level.intersected_cell(rect_at(x: @x, y: @y), grid_name: 'Collisions')
+
+    return unless cell
+
+    # Writing messy code for a few
+
+    $args.state.mob = Mob.new unless $args.state.mob
+  end
+
+  def can_move?(next_rect, level)
+    !level.collides?(next_rect, grid_name: 'Collisions', type: :solid)
   end
 
   def rect_at(x:, y:)

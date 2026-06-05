@@ -22,7 +22,7 @@ module SimpleLdtk
     def draw_int_grid(name, type:, color: [255, 0, 0])
       r, g, b = color
 
-      cells_for(name, type).map do |cell|
+      cells_for_type(name, type).map do |cell|
         {
           x: cell[:x],
           y: cell[:y],

@@ -9,19 +9,19 @@
 	"neighbourLevels": [],
 	"customFields" : {},
 	"layers": [
-		"Buildlings.png",
+		"Buildings.png",
 		"Paths.png"
 	],
 	"entities": {
 		"Player": [
 			{
 				"id": "Player",
-				"iid": "2bba8cf0-48b0-11f1-a70d-d9e8f50d7b12",
+				"iid": "db833c10-48b0-11f1-80f6-0fa11cfb776e",
 				"layer": "Player",
-				"x": 208,
-				"y": 168,
-				"width": 8,
-				"height": 8,
+				"x": 96,
+				"y": 160,
+				"width": 16,
+				"height": 16,
 				"color": 12470831,
 				"customFields" : {}
 			}
