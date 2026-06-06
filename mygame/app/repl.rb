@@ -1,3 +1,4 @@
+require 'lib/stateful/stateful'
 # ===============================================================
 # Welcome to repl.rb
 # ===============================================================
@@ -16,8 +17,152 @@
 # ===============================================================
 
 # Remove the x from xrepl to run the code. Add the x back to ignore to code.
-xrepl do
-  puts "The result of 1 + 2 is: #{1 / 4}"
+repl do
+  class RecordEnter
+    def call(subject) = subject.log << :chasing_after_enter_obj
+  end
+
+  class TestMob
+    include Stateful
+
+    attr_reader :log
+    attr_accessor :scared, :sees_player, :safe
+
+    state_machine do
+      state :appearing, initial: true do
+        after_enter :on_appear_enter            # symbol form
+      end
+
+      state :idling do                          # proc form
+        before_enter { log << :idling_before_enter }
+        after_enter  { log << :idling_after_enter }
+        before_exit  { log << :idling_before_exit }
+        after_exit   { log << :idling_after_exit }
+      end
+
+      state :chasing do
+        after_enter RecordEnter.new             # callable-object form
+      end
+
+      state :fleeing
+
+      event :idle do
+        before { log << :idle_event_before }
+        after  { log << :idle_event_after }
+        transition from: :appearing, to: :idling
+      end
+
+      event :react do
+        # Precedence: scared beats sees_player if both are true
+        transition from: :idling, to: :fleeing, if: :scared?
+        transition from: :idling, to: :chasing, if: :sees_player?
+      end
+
+      event :calm, if: :safe? do
+        transition from: %i[chasing fleeing], to: :idling
+      end
+    end
+
+    def initialize
+      @log = []
+      @scared = false
+      @sees_player = false
+      @safe = false
+    end
+
+    def scared?      = @scared
+    def sees_player? = @sees_player
+    def safe?        = @safe
+
+    def on_appear_enter = @log << :appearing_after_enter
+
+    # clear the log between steps so each assertion is isolated
+    def reset_log = @log = []
+  end
+
+  $passed = 0
+  $failed = 0
+
+  def check(label, actual, expected)
+    if actual == expected
+      $passed += 1
+      puts "✓ #{label}"
+    else
+      $failed += 1
+      puts "✗ #{label}"
+      puts "expected: #{expected.inspect}"
+      puts "actual: #{actual.inspect}"
+    end
+  end
+
+  def section(label)
+    puts "\n=== #{label} ==="
+  end
+
+  mob = TestMob.new
+
+  section 'initial state'
+  check 'starts in :appearing', mob.current_state, :appearing
+  check 'appearing? true', mob.appearing?, true
+  check 'idling? false', mob.idling?, false
+
+  section ':idle'
+  mob.reset_log
+  result = mob.idle
+  check 'returns true', result, true
+  check 'now :idling', mob.current_state, :idling
+  check 'hook order', mob.log, %i[
+    idle_event_before
+    idling_before_enter
+    idling_after_enter
+    idle_event_after
+  ]
+
+  section ':react'
+  mob.reset_log
+  result = mob.react
+  check 'returns false', result, false
+  check 'stays :idling', mob.current_state, :idling
+  check 'no callbacks ran', mob.log, []
+
+  section ':react with sees_player?'
+  mob.reset_log
+  mob.sees_player = true
+  result = mob.react
+  check 'returns true', result, true
+  check 'now :chasing', mob.current_state, :chasing
+  check 'exit idling, enter chasing', mob.log, %i[
+    idling_before_exit
+    idling_after_exit
+    chasing_after_enter_obj
+  ]
+
+  section ':calm while safe? false'
+  mob.reset_log
+  result = mob.calm
+  check 'returns false', result, false
+  check 'stays :chasing', mob.current_state, :chasing
+  check 'no callbacks ran', mob.log, []
+
+  section ':calm with safe? true'
+  mob.reset_log
+  mob.safe = true
+  result = mob.calm
+  check 'returns true', result, true
+  check 'now :idling', mob.current_state, :idling
+
+  section 'guard precedence: scared beats sees_player'
+  mob.reset_log
+  mob.scared = true
+  mob.sees_player = true
+  result = mob.react
+  check 'returns true', result, true
+  check 'now :fleeing', mob.current_state, :fleeing
+
+  # ── tally ─────────────────────────────────────────────────────────────
+  puts "\n#{'=' * 40}"
+  puts "PASSED: #{$passed} FAILED: #{$failed}"
+  puts "\n#{'=' * 40}"
 end
 
 # ====================================================================================
