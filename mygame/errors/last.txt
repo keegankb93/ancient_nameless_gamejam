@@ -1,7 +1,11 @@
-* EXCEPTION: Key not found: :walk_down
+* EXCEPTION:
+* EXCEPTION: ~Runtime#add_to_require_queue~ failed for =app/repl.rb=.
+unknown keyword: if
 ** Backtrace:
-*** lib/animatable.rb:164:in play_animation
-*** app/mob.rb:34:in tick
-*** app/main.rb:32:in update
-*** app/main.rb:14:in tick
-*** app/main.rb:84:in tick
+*** lib/stateful/event.rb:7:in initialize
+*** lib/stateful/machine.rb:34:in event
+*** app/repl.rb:62:in state_machine
+*** lib/stateful/stateful.rb:32:in state_machine
+*** app/repl.rb:31
+*** app/repl.rb:25:in repl
+*** app/repl.rb:20

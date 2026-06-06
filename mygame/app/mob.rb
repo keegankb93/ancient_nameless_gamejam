@@ -1,6 +1,8 @@
 require 'lib/animatable'
+require 'lib/switchboard'
 
 class Mob
+  include Switchboard
   include Animatable
   attr_sprite
 
@@ -21,22 +23,35 @@ class Mob
     end
   end
 
+  state_machine do
+    state :spawning, initial: true
+    state :idling
+
+    event :spawn do
+      transition from: :spawning, to: :idling
+    end
+
+    event :idle do
+      transition from: :idling, to: :idling
+    end
+  end
+
   def initialize(x: 200, y: 100, w: 32, h: 32)
     @x = x
     @y = y
     @w = w
     @h = h
-    @state = :appearing
+
     play_animation :appear
   end
 
   def tick(args)
-    case @state
-    when :appearing
-      if animation_finished?
-        @state = :idling
-        play_animation :idle_down_right
-      end
+    # puts current_state, current_animation, animation_finished?
+    case current_state
+    when :spawning
+      spawn if animation_finished?
+    when :idling
+      play_animation :idle_down_right
     end
   end
 end
