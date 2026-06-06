@@ -17,7 +17,7 @@ require 'lib/stateful/stateful'
 # ===============================================================
 
 # Remove the x from xrepl to run the code. Add the x back to ignore to code.
-repl do
+xrepl do
   class RecordEnter
     def call(subject) = subject.log << :chasing_after_enter_obj
   end
@@ -30,10 +30,10 @@ repl do
 
     state_machine do
       state :appearing, initial: true do
-        after_enter :on_appear_enter            # symbol form
+        after_enter :on_appear_enter
       end
 
-      state :idling do                          # proc form
+      state :idling do
         before_enter { log << :idling_before_enter }
         after_enter  { log << :idling_after_enter }
         before_exit  { log << :idling_before_exit }
@@ -41,7 +41,7 @@ repl do
       end
 
       state :chasing do
-        after_enter RecordEnter.new             # callable-object form
+        after_enter RecordEnter.new # callable-object form
       end
 
       state :fleeing

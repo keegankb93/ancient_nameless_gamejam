@@ -1,11 +1,8 @@
 * EXCEPTION:
 * EXCEPTION: ~Runtime#add_to_require_queue~ failed for =app/repl.rb=.
-unknown keyword: if
+* ERROR: Exception while requiring lib/stateful/stateful.rb.
+lib/stateful/stateful.rb does not exist.
 ** Backtrace:
-*** lib/stateful/event.rb:7:in initialize
-*** lib/stateful/machine.rb:34:in event
-*** app/repl.rb:62:in state_machine
-*** lib/stateful/stateful.rb:32:in state_machine
-*** app/repl.rb:31
-*** app/repl.rb:25:in repl
-*** app/repl.rb:20
+*** app/repl.rb:1
+** Backtrace:
+*** app/repl.rb:1
