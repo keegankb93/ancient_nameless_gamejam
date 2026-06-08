@@ -60,7 +60,10 @@ module Main
 
         config.int_grid 'Collisions' do |grid|
           grid.value 1, as: :solid
-          grid.value 2, as: :mob_trigger
+        end
+
+        config.int_grid 'Triggers' do |grid|
+          grid.value 1, as: :mob_trigger
         end
 
         config.entity 'Player' do |e|
