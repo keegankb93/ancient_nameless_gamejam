@@ -184,17 +184,17 @@ class Mob
   end
 
   def clear_line_of_sight?
-    start_x = center_x
-    start_y = center_y
+    start_x = center_x # 10
+    start_y = center_y # 10
 
-    end_x = target.center_x
-    end_y = target.center_y
+    end_x = target.center_x # 5
+    end_y = target.center_y # 5
 
-    dx = end_x - start_x
-    dy = end_y - start_y
+    dx = end_x - start_x # 5 - 10 = -5
+    dy = end_y - start_y # 5 - 10 = -5
 
-    distance = Math.sqrt((dx * dx) + (dy * dy))
-    steps = (distance / SIGHT_STEP).ceil
+    distance = Math.sqrt((dx * dx) + (dy * dy)) # 5 * 5 + 5 * 5 = 50 -> sqrt(50) = 7.07
+    steps = (distance / SIGHT_STEP).ceil # 7.07 / 8 = 0.88 -> ceil = 1 "grid tile"
 
     1.upto(steps) do |i|
       t = i / steps.to_f
