@@ -54,12 +54,18 @@ class Player
 
     @x = @x.clamp(0, level.width - @w)
     @y = @y.clamp(0, level.height - @h)
-
-    check_triggers(level)
   end
 
   def flip_animation?
     @facing == :side && @side_direction.negative?
+  end
+
+  def center_x
+    @x + (@w * 0.5)
+  end
+
+  def center_y
+    @y + (@h * 0.5)
   end
 
   private
@@ -87,16 +93,6 @@ class Player
     next_rect = rect_at(x: @x, y: @y + dy)
 
     @y += dy if can_move?(next_rect, level)
-  end
-
-  def check_triggers(level)
-    cell = level.intersected_cell(rect_at(x: @x, y: @y), grid_name: 'Collisions')
-
-    return unless cell
-
-    # Writing messy code for a few
-
-    $args.state.mob = Mob.new unless $args.state.mob
   end
 
   def can_move?(next_rect, level)

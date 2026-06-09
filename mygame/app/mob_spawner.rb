@@ -36,7 +36,7 @@ class MobSpawner
     spawn_point = valid_spawn_points.sample
     return unless spawn_point
 
-    @mobs << Mob.new(x: spawn_point.x, y: spawn_point.y, w: MOB_W, h: MOB_H)
+    @mobs << Mob.new(level: @world, target: @player, x: spawn_point.x, y: spawn_point.y, w: MOB_W, h: MOB_H)
     @last_spawn_time = Kernel.tick_count
   end
 
