@@ -2,25 +2,24 @@ require 'lib/simple_ldtk/level'
 require 'app/camera'
 require 'app/player'
 require 'app/mob'
+require 'app/mob_spawner'
 
 module Main
   class Game
     attr_dr
-    attr_accessor :level, :camera, :player, :scene, :initiated
+    attr_accessor :level, :camera, :player, :scene, :mob_spawner
 
-    def tick
-      init unless initiated
-      handle_inputs
-      update
-      render
-    end
-
-    def init
+    def initialize
       create_level
       create_camera
       create_player
+      create_mob_spawner
+    end
 
-      self.initiated = true
+    def tick
+      handle_inputs
+      update
+      render
     end
 
     def handle_inputs
@@ -29,20 +28,22 @@ module Main
 
     def update
       player.tick(args)
-      args.state.mob.tick(args) if args.state.mob
+      mob_spawner.update
+      # args.state.mob.tick(args) if args.state.mob
+      camera.resize_to_screen
       camera.follow(player, level)
     end
 
     def render
       scene = outputs[:scene]
-      scene.w = level.width
-      scene.h = level.height
+      scene.w = level.w
+      scene.h = level.h
 
       # args.state.mob ||= Mob.new
 
       scene.sprites << level.tilemap
       scene.sprites << player.animation_sprite
-      scene.sprites << args.state.mob.animation_sprite if args.state.mob
+      mob_spawner.render(scene)
 
       # scene.debug << level.debug_int_grid do |debug|
       #  debug.int_grid 'Collisions', type: :solid, color: [255, 0, 0]
@@ -62,8 +63,8 @@ module Main
           grid.value 1, as: :solid
         end
 
-        config.int_grid 'Triggers' do |grid|
-          grid.value 1, as: :mob_trigger
+        config.int_grid 'MobSpawns' do |grid|
+          grid.value 1, as: :mob_spawn
         end
 
         config.entity 'Player' do |e|
@@ -78,6 +79,14 @@ module Main
 
     def create_player
       self.player = level.entity('Player')
+    end
+
+    def create_mob_spawner
+      self.mob_spawner = begin
+        ms = MobSpawner.new(world: level, player: player)
+        ms.args = args
+        ms
+      end
     end
   end
 

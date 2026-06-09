@@ -1,11 +1,13 @@
 class Camera
-  attr_accessor :x, :y, :w, :h, :scale, :show_empty_space
+  attr_accessor :x, :y, :w, :h, :scale, :show_empty_space, :draw_x, :draw_y
 
   def initialize(x: 0, y: 0, w: 1280, h: 720, scale: 3.0, show_empty_space: :yes)
     @x = x
     @y = y
     @w = w
     @h = h
+    @draw_x = 0
+    @draw_y = 0
     @scale = scale
     @show_empty_space = show_empty_space
   end
@@ -29,8 +31,8 @@ class Camera
   # The source values control which part of the world the camera is looking at
   def viewport_for(target_path)
     {
-      x: 0,
-      y: 0,
+      x: draw_x,
+      y: draw_y,
       w: w,
       h: h,
       path: target_path,
@@ -64,8 +66,11 @@ class Camera
   # Centers the camera on the given target
   # Clamps afterward so the camera does not show outside the world bounds
   def follow(target, world)
-    @x = target.x - source_w.half
-    @y = target.y - source_h.half
+    target_x = target.x - source_w.half
+    target_y = target.y - source_h.half
+
+    @x = @x.lerp(target_x, 0.25)
+    @y = @y.lerp(target_y, 0.25)
 
     clamp_to_world(world)
   end
@@ -84,7 +89,14 @@ class Camera
   # Keeps the camera viewport inside the world bounds
   # The max calls handle maps smaller than the current camera viewport
   def clamp_to_world(world)
-    @x = @x.clamp(0, [world.width - source_w, 0].max).lerp(0, 0.25)
-    @y = @y.clamp(0, [world.height - source_h, 0].max).lerp(0, 0.25)
+    @x = @x.clamp(0, [world.width - source_w, 0].max)
+    @y = @y.clamp(0, [world.height - source_h, 0].max)
+  end
+
+  def resize_to_screen
+    self.draw_x = Grid.allscreen_left
+    self.draw_y = Grid.allscreen_bottom
+    self.w = Grid.allscreen_w
+    self.h = Grid.allscreen_h
   end
 end

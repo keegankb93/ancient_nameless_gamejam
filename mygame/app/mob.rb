@@ -23,7 +23,7 @@ class Mob
     end
   end
 
-  state_machine do
+  switchboard do
     state :spawning, initial: true
     state :idling
 
@@ -45,8 +45,7 @@ class Mob
     play_animation :appear
   end
 
-  def tick(args)
-    # puts current_state, current_animation, animation_finished?
+  def tick
     case current_state
     when :spawning
       spawn if animation_finished?

@@ -1,8 +1,23 @@
 * EXCEPTION:
-* EXCEPTION: ~Runtime#add_to_require_queue~ failed for =app/repl.rb=.
-* ERROR: Exception while requiring lib/stateful/stateful.rb.
-lib/stateful/stateful.rb does not exist.
+* ERROR: :clamp_position method missing on ~Mob~.
+
+#+begin_src ~Mob#inspect~
+{:x=>nil, :y=>nil, :w=>nil, :h=>nil, :path=>nil, :angle=>nil, :a=>nil, :r=>nil, :g=>nil, :b=>nil, :tile_x=>nil, :tile_y=>nil, :tile_w=>nil, :tile_h=>nil, :flip_horizontally=>nil, :flip_vertically=>nil, :angle_anchor_x=>nil, :angle_anchor_y=>nil, :id=>nil, :angle_x=>nil, :angle_y=>nil, :z=>nil, :source_x=>nil, :source_y=>nil, :source_w=>nil, :source_h=>nil, :blendmode_enum=>nil, :source_x2=>nil, :source_y2=>nil, :source_x3=>nil, :source_y3=>nil, :x2=>nil, :y2=>nil, :x3=>nil, :y3=>nil, :anchor_x=>nil, :anchor_y=>nil, :r2=>nil, :g2=>nil, :b2=>nil, :a2=>nil, :r3=>nil, :g3=>nil, :b3=>nil, :a3=>nil, :scale_quality_enum=>nil, :blendmode=>nil}
+#+end_src ~Mob#inspect~
+
+
+
+The method named
+  :clamp_position
+with args
+  [176, 176, 32, 32]
+doesn't exist on [Mob, #<Class:#<Mob:0xab9c36800>>, AttrSprite, AttrRect, Animatable, Switchboard].
+
+(suggestions above)
 ** Backtrace:
-*** app/repl.rb:1
-** Backtrace:
-*** app/repl.rb:1
+*** app/mob.rb:40:in initialize
+*** app/mob_spawner.rb:37:in spawn_mob
+*** app/mob_spawner.rb:16:in update
+*** app/main.rb:31:in update
+*** app/main.rb:21:in tick
+*** app/main.rb:96:in tick

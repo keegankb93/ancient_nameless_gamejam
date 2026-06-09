@@ -11,6 +11,9 @@ module SimpleLdtk
                 :int_grids,
                 :entities
 
+    alias w width
+    alias h height
+
     def initialize(dir:, data:, composite_path:, int_grids:, entities:)
       @dir = dir
       @data = data
