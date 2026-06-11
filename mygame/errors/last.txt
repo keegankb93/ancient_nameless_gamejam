@@ -1,24 +1,31 @@
 * EXCEPTION:
-* ERROR: :chase_target method missing on ~Mob~.
+* ERROR: :rect_at method missing on ~Mob~.
 
 #+begin_src ~Mob#inspect~
-{:x=>216, :y=>136, :w=>32, :h=>32, :path=>nil, :angle=>nil, :a=>nil, :r=>nil, :g=>nil, :b=>nil, :tile_x=>nil, :tile_y=>nil, :tile_w=>nil, :tile_h=>nil, :flip_horizontally=>nil, :flip_vertically=>nil, :angle_anchor_x=>nil, :angle_anchor_y=>nil, :id=>nil, :angle_x=>nil, :angle_y=>nil, :z=>nil, :source_x=>nil, :source_y=>nil, :source_w=>nil, :source_h=>nil, :blendmode_enum=>nil, :source_x2=>nil, :source_y2=>nil, :source_x3=>nil, :source_y3=>nil, :x2=>nil, :y2=>nil, :x3=>nil, :y3=>nil, :anchor_x=>nil, :anchor_y=>nil, :r2=>nil, :g2=>nil, :b2=>nil, :a2=>nil, :r3=>nil, :g3=>nil, :b3=>nil, :a3=>nil, :scale_quality_enum=>nil, :blendmode=>nil}
+{:x=>184, :y=>216, :w=>32, :h=>32, :path=>nil, :angle=>nil, :a=>nil, :r=>nil, :g=>nil, :b=>nil, :tile_x=>nil, :tile_y=>nil, :tile_w=>nil, :tile_h=>nil, :flip_horizontally=>nil, :flip_vertically=>nil, :angle_anchor_x=>nil, :angle_anchor_y=>nil, :id=>nil, :angle_x=>nil, :angle_y=>nil, :z=>nil, :source_x=>nil, :source_y=>nil, :source_w=>nil, :source_h=>nil, :blendmode_enum=>nil, :source_x2=>nil, :source_y2=>nil, :source_x3=>nil, :source_y3=>nil, :x2=>nil, :y2=>nil, :x3=>nil, :y3=>nil, :anchor_x=>nil, :anchor_y=>nil, :r2=>nil, :g2=>nil, :b2=>nil, :a2=>nil, :r3=>nil, :g3=>nil, :b3=>nil, :a3=>nil, :scale_quality_enum=>nil, :blendmode=>nil}
 #+end_src ~Mob#inspect~
 
 ** Did you mean?
-Here's a list of methods that kind of look like :chase_target.
-*** :chase
-*** :target
-*** :target=
+Here's a list of methods that kind of look like :rect_at.
+*** :rect_center_point
+*** :rect_props_ffi
+*** :rect_to_line
 
 The method named
-  :chase_target
-doesn't exist on [Mob, #<Class:#<Mob:0xcbbbcee90>>, AttrSprite, AttrRect, Animatable, Switchboard].
+  :rect_at
+with args
+  [{:x=>183.5, :y=>216}]
+doesn't exist on [Mob, #<Class:#<Mob:0x7842ff0e0>>, AttrSprite, AttrRect, Animatable, Switchboard].
 
 (suggestions above)
 ** Backtrace:
-*** app/mob.rb:94:in chase
-*** app/mob.rb:73:in tick
+*** app/mob.rb:169:in future_position
+*** app/mob.rb:150:in try_move
+*** app/mob.rb:146:in move_in_current_direction
+*** app/mob.rb:133:in move_in_any_direction
+*** app/mob.rb:101:in wander
+*** app/mob.rb:74:in idle
+*** app/mob.rb:69:in tick
 *** app/mob_spawner.rb:19:in update
 *** app/main.rb:31:in update
 *** app/main.rb:21:in tick
