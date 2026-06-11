@@ -1,9 +1,11 @@
 require 'lib/animatable'
+require 'lib/body'
 require 'lib/switchboard'
 
 class Mob
   include Switchboard
   include Animatable
+  include Body
   attr_sprite
 
   SPRITE_DIR = 'sprites/mobs/observer'
@@ -26,35 +28,33 @@ class Mob
   switchboard do
     state :spawning, initial: true
     state :idling
-    state :chasing
-    state :searching
 
     event :spawn do
       transition from: :spawning, to: :idling
     end
-
-    event :spot_target do
-      transition from: %i[idling searching], to: :chasing
-    end
-
-    event :lose_target do
-      transition from: :chasing, to: :searching
-    end
-
-    event :give_up do
-      transition from: :searching, to: :idling
-    end
   end
 
-  SIGHT_RANGE = 160
-  SIGHT_STEP = 8
   SPEED = 0.5
+  MOVE_TIME = 90
+  IDLE_TIME = 30
+  COLLISION_W = 20
+  COLLISION_H = 20
+  DIRECTIONS = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+    [-1, -1],
+    [-1, 1],
+    [1, -1],
+    [1, 1]
+  ]
 
-  attr_accessor :target
+  attr_accessor :neighbors
 
-  def initialize(level:, x: 200, y: 100, w: 32, h: 32, target: nil)
+  def initialize(level:, x: 200, y: 100, w: 32, h: 32)
     @level = level
-    @target = target
+    @neighbors = []
     @x = x
     @y = y
     @w = w
@@ -69,153 +69,144 @@ class Mob
       spawn if animation_finished?
     when :idling
       idle
-    when :chasing
-      chase
-    when :searching
-      search
     end
   end
 
   def idle
-    play_animation :idle_down_right
-
-    spot_target if can_see_target?
+    wander
   end
 
-  def chase
-    unless can_see_target?
-      lose_target
-      return
-    end
-
-    @target_x = target.x
-    @target_y = target.y
-
-    chase_target
+  def collision_rect
+    collision_rect_for(rect)
   end
 
-  def search
-    if can_see_target?
-      spot_target
-      return
-    end
-
-    unless @target_x && @target_y
-      give_up
-      return
-    end
-
-    chase_target
-
-    give_up if close_to?(@target_x, @target_y)
+  def inbounds?
+    @x + @w >= 0 && @y + @h >= 0 && @x <= @level.width && @y <= @level.height
   end
 
   private
 
-  def can_see_target?
-    return false unless target
-    return false unless within_sight_range?
+  def wander
+    if resting?
+      play_animation :idle_down_right
+      return
+    end
 
-    clear_line_of_sight?
+    if move_time_finished?
+      rest
+      play_animation :idle_down_right
+      return
+    end
+
+    pick_direction unless @direction_x
+
+    moved = move_in_any_direction
+
+    rest unless moved
+
+    play_animation(moved ? :walk_down : :idle_down_right)
   end
 
-  def chase_target
-    dx = @target_x - @x
-    dy = @target_y - @y
+  def resting?
+    return false unless @rest_until
+    return true if Kernel.tick_count < @rest_until
 
-    length = Math.sqrt((dx * dx) + (dy * dy))
-    return if length.zero?
-
-    vx = dx / length
-    vy = dy / length
-
-    move_x(vx * SPEED)
-    move_y(vy * SPEED)
-
-    play_animation :walk_down
+    @rest_until = nil
+    false
   end
 
-  def move_x(dx)
-    next_rect = rect_at(x: @x + dx, y: @y)
-
-    @x += dx unless solid?(next_rect)
+  def move_time_finished?
+    @change_direction_at && Kernel.tick_count >= @change_direction_at
   end
 
-  def move_y(dy)
-    next_rect = rect_at(x: @x, y: @y + dy)
+  def rest
+    @direction_x = nil
+    @direction_y = nil
+    @change_direction_at = nil
+    @rest_until = Kernel.tick_count + IDLE_TIME
+  end
 
-    @y += dy unless solid?(next_rect)
+  def pick_direction(direction = DIRECTIONS.sample)
+    @direction_x, @direction_y = direction
+    @change_direction_at = Kernel.tick_count + MOVE_TIME
+  end
+
+  def move_in_any_direction
+    return true if move_in_current_direction
+
+    DIRECTIONS.shuffle.each do |direction|
+      next if direction == [@direction_x, @direction_y]
+
+      pick_direction(direction)
+      return true if move_in_current_direction
+    end
+
+    false
+  end
+
+  def move_in_current_direction
+    try_move(@direction_x * SPEED, @direction_y * SPEED)
+  end
+
+  def try_move(dx, dy)
+    future = future_position(dx, dy)
+    collision = future_collision(future)
+    moved = false
+
+    unless collision.dx_collision
+      @x = collision.x
+      moved = true
+    end
+
+    unless collision.dy_collision
+      @y = collision.y
+      moved = true
+    end
+
+    moved
+  end
+
+  def future_position(dx, dy)
+    {
+      dx: rect_at(x: @x + dx, y: @y),
+      dy: rect_at(x: @x, y: @y + dy)
+    }
+  end
+
+  def future_collision(future)
+    {
+      dx_collision: blocked?(future.dx),
+      x: future.dx.x,
+      dy_collision: blocked?(future.dy),
+      y: future.dy.y
+    }
+  end
+
+  def blocked?(rect)
+    solid?(rect) || mob_at?(collision_rect_for(rect))
   end
 
   def solid?(rect)
     @level.collides?(rect, grid_name: 'Collisions', type: :solid)
   end
 
-  def close_to?(x, y)
-    (@x - x).abs < 4 && (@y - y).abs < 4
-  end
+  def mob_at?(rect)
+    current = collision_rect
 
-  def rect_at(x:, y:)
-    {
-      x: x,
-      y: y,
-      w: @w,
-      h: @h
-    }
-  end
+    neighbors.any? do |mob|
+      next false if mob.equal?(self)
+      next false if current.intersect_rect?(mob.collision_rect)
 
-  def within_sight_range?
-    distance_squared(center_x, center_y, target.center_x, target.center_y) <= SIGHT_RANGE * SIGHT_RANGE
-  end
-
-  def distance_squared(ax, ay, bx, by)
-    dx = ax - bx
-    dy = ay - by
-
-    dx * dx + dy * dy
-  end
-
-  def center_x
-    @x + (@w * 0.5)
-  end
-
-  def center_y
-    @y + (@h * 0.5)
-  end
-
-  def clear_line_of_sight?
-    start_x = center_x # 10
-    start_y = center_y # 10
-
-    end_x = target.center_x # 5
-    end_y = target.center_y # 5
-
-    dx = end_x - start_x # 5 - 10 = -5
-    dy = end_y - start_y # 5 - 10 = -5
-
-    distance = Math.sqrt((dx * dx) + (dy * dy)) # 5 * 5 + 5 * 5 = 50 -> sqrt(50) = 7.07
-    steps = (distance / SIGHT_STEP).ceil # 7.07 / 8 = 0.88 -> ceil = 1 "grid tile"
-
-    1.upto(steps) do |i|
-      t = i / steps.to_f
-
-      x = start_x + dx * t
-      y = start_y + dy * t
-
-      return false if sight_blocked_at?(x, y)
+      rect.intersect_rect?(mob.collision_rect)
     end
-
-    true
   end
 
-  def sight_blocked_at?(x, y)
-    sight_rect = {
-      x: x,
-      y: y,
-      w: 2,
-      h: 2
+  def collision_rect_for(source)
+    {
+      x: source.x + ((source.w - COLLISION_W) * 0.5),
+      y: source.y + ((source.h - COLLISION_H) * 0.5),
+      w: COLLISION_W,
+      h: COLLISION_H
     }
-
-    @level.collides?(sight_rect, grid_name: 'Collisions', type: :solid)
   end
 end

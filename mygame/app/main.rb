@@ -42,8 +42,8 @@ module Main
       # args.state.mob ||= Mob.new
 
       scene.sprites << level.tilemap
-      scene.sprites << player.animation_sprite
       mob_spawner.render(scene)
+      scene.sprites << player.animation_sprite
 
       # scene.debug << level.debug_int_grid do |debug|
       #  debug.int_grid 'Collisions', type: :solid, color: [255, 0, 0]

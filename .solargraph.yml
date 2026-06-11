@@ -1,0 +1,20 @@
+---
+include:
+  - "mygame/app/**/*.rb"
+  - "mygame/lib/**/*.rb"
+
+exclude:
+  - "mygame/repl.rb"
+  - "**/dragonruby/**/*"
+  - ".dragonruby/**/*"
+  - "samples/**/*"
+  - "docs/**/*"
+  - "logs/**/*"
+  - "tmp/**/*"
+  - "builds/**/*"
+
+require: []
+domains: []
+reporters: []
+format: false
+max_files: 1000

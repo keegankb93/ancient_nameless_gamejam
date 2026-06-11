@@ -1,0 +1,7 @@
+/*
+!mygame/
+**/.DS_Store
+.DS_Store
+!.gitignore
+!.rubocop.yml
+!.solargraph.yml

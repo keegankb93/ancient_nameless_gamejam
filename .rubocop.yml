@@ -1,0 +1,21 @@
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: disable
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/MutableConstant:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Naming/MethodParameterName:
+  MinNameLength: 0
