@@ -28,32 +28,29 @@ class Mob
     state :idling
     state :wandering do
       before_enter :set_current_direction
-      after_exit :clear_current_direction
+      after_exit :clear_directions
     end
     state :blocked
 
-    event :spawn_finished do
-      transition from: :spawning, to: :idling
+    event :idle do
+      transition from: :spawning, to: :idling, if: :animation_finished?
+      transition from: :wandering, to: :idling, if: :finished_wandering
+      transition from: :blocked, to: :idling
     end
 
-    event :idle_finished, if: :finished_idling do
-      transition from: :idling, to: :wandering
+    event :wander do
+      transition from: :idling, to: :wandering, if: :finished_idling
     end
 
-    # For now it doesn't really seem that bad if they try to run into a wall again
-    # I'm not going to add extra code unless it becomes a gameplay problem
-    # event :wander_blocked do
-    #   transition from: :wandering, to: :blocked
-    # end
-
-    event :wander_finished, if: :finished_wandering do
-      transition from: :wandering, to: :idling
+    event :block do
+      transition from: :wandering, to: :blocked
+      after :recover_from_block
     end
   end
 
   SPEED = 0.5
   WANDER_TIME = 90
-  IDLE_TIME = 30
+  IDLE_TIME = 90
   COLLISION_W = 20
   COLLISION_H = 20
   DIRECTIONS = [
@@ -78,6 +75,7 @@ class Mob
     @h = h
 
     @current_direction = nil
+    @available_directions = nil
     @facing = :down
 
     play_animation :appear
@@ -86,33 +84,51 @@ class Mob
   def tick
     case current_state
     when :spawning
-      spawn_finished if animation_finished?
-    when :idling
       idle
-    when :wandering
+    when :idling
+      idle_behavior
       wander
+    when :wandering
+      wander_behavior
+      idle
     end
   end
 
-  def idle
+  def idle_behavior
     play_animation :idle_down_right
-
-    idle_finished
   end
 
-  def wander
+  def wander_behavior
     dx, dy = @current_direction
 
     update_facing(dx, dy)
     play_animation(:"walk_#{@facing}")
 
     move_x(dx * SPEED)
-    move_y(dy * SPEED)
+    return unless current_state == :wandering
 
-    wander_finished
+    move_y(dy * SPEED)
+    nil unless current_state == :wandering
   end
 
   private
+
+  def recover_from_block
+    # We could probably remove the already known bad direcions out of here, but it's not like this is a heavy op
+    @available_directions = DIRECTIONS.select do |dir|
+      dx, dy = dir
+
+      next_x = @x + (dx * SPEED)
+      next_y = @y + (dy * SPEED)
+
+      can_move_x = can_move?(rect_at(x: next_x, y: @y))
+      can_move_y = can_move?(rect_at(x: @x, y: next_y))
+
+      can_move_x && can_move_y
+    end
+
+    idle
+  end
 
   def update_facing(_dx, dy)
     return if dy.zero?
@@ -121,11 +137,20 @@ class Mob
   end
 
   def set_current_direction
-    @current_direction = DIRECTIONS.sample
+    @current_direction = @available_directions&.sample || DIRECTIONS.sample
   end
 
   def clear_current_direction
     @current_direction = nil
+  end
+
+  def clear_available_directions
+    @available_directions = nil
+  end
+
+  def clear_directions
+    clear_current_direction
+    clear_available_directions
   end
 
   def finished_idling
@@ -147,13 +172,23 @@ class Mob
   def move_x(dx)
     next_rect = rect_at(x: @x + dx, y: @y)
 
-    @x += dx if can_move?(next_rect)
+    unless can_move?(next_rect)
+      block
+      return
+    end
+
+    @x += dx
   end
 
   def move_y(dy)
     next_rect = rect_at(x: @x, y: @y + dy)
 
-    @y += dy if can_move?(next_rect)
+    unless can_move?(next_rect)
+      block
+      return
+    end
+
+    @y += dy
   end
 
   def can_move?(next_rect)

@@ -9,7 +9,7 @@ class MobSpawner
     @world = world
     @player = player
     @mobs = []
-    @spawn_limit = 1
+    @spawn_limit = 15
     @last_spawn_time = nil
   end
 
@@ -31,7 +31,8 @@ class MobSpawner
 
   def spawn_mob
     return if @mobs.size >= @spawn_limit
-    return if @last_spawn_time && Kernel.tick_count - @last_spawn_time < 90
+
+    # return if @last_spawn_time && Kernel.tick_count - @last_spawn_time < 90
 
     spawn_point = valid_spawn_points.sample
     return unless spawn_point
