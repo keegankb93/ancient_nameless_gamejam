@@ -34,12 +34,12 @@ class Mob
 
     event :idle do
       transition from: :spawning, to: :idling, if: :animation_finished?
-      transition from: :wandering, to: :idling, if: :finished_wandering
+      transition from: :wandering, to: :idling, if: :finished_wandering?
       transition from: :blocked, to: :idling
     end
 
     event :wander do
-      transition from: :idling, to: :wandering, if: :finished_idling
+      transition from: :idling, to: :wandering, if: :finished_idling?
     end
 
     event :block do
@@ -153,11 +153,11 @@ class Mob
     clear_available_directions
   end
 
-  def finished_idling
+  def finished_idling?
     state_elapsed >= IDLE_TIME
   end
 
-  def finished_wandering
+  def finished_wandering?
     state_elapsed >= WANDER_TIME
   end
 
