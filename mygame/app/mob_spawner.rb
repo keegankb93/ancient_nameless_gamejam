@@ -9,7 +9,7 @@ class MobSpawner
     @world = world
     @player = player
     @mobs = []
-    @spawn_limit = 10
+    @spawn_limit = 1
     @last_spawn_time = nil
   end
 

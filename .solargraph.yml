@@ -17,6 +17,5 @@ require: []
 domains: []
 reporters:
   - rubocop
-  - require_not_found
 format: false
 max_files: 1000
