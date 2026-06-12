@@ -33,7 +33,7 @@ class Mob
     state :blocked
 
     event :idle do
-      transition from: :spawning, to: :idling, if: :animation_finished?
+      transition from: :spawning, to: :wandering, if: :animation_finished?
       transition from: :wandering, to: :idling, if: :finished_wandering?
       transition from: :blocked, to: :idling
     end
