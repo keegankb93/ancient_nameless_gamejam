@@ -16,6 +16,8 @@ class Player
     end
   end
 
+  attr_reader :fragments_collected
+
   def initialize(x:, y:, w:, h:)
     @x = x
     @y = y
@@ -24,6 +26,7 @@ class Player
 
     @facing = :down
     @side_direction = 1
+    @fragments_collected = 0
 
     play_animation(:idle_down)
   end
@@ -52,8 +55,28 @@ class Player
     move_x(dx * speed, level)
     move_y(dy * speed, level)
 
+    handle_fragment_collision
+
     @x = @x.clamp(0, level.width - @w)
     @y = @y.clamp(0, level.height - @h)
+  end
+
+  def collect_fragment(fragment)
+    @fragments_collected += 1
+
+    fragment_spawner.remove_fragment(fragment)
+  end
+
+  def handle_fragment_collision
+    fragment = Geometry.find_intersect_rect(rect_at(x: @x, y: @y), fragment_spawner.fragments)
+
+    return unless fragment
+
+    collect_fragment(fragment)
+  end
+
+  def fragment_spawner
+    $game.fragment_spawner
   end
 
   def flip_animation?

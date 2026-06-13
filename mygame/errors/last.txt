@@ -1,29 +1,40 @@
-* EXCEPTION:
-Event fire error: * ERROR: :wander_unblocked method missing on ~Mob~.
+* EXCEPTION POSSIBLY CAUSED BY CALLING ~gtk.reset~: maybe use ~$gtk.reset_next_tick~ instead.
+An exception occurred soon after ~$gtk.reset~ was invoked.
 
-#+begin_src ~Mob#inspect~
-{:x=>168.0, :y=>138.0, :w=>32, :h=>32, :path=>nil, :angle=>nil, :a=>nil, :r=>nil, :g=>nil, :b=>nil, :tile_x=>nil, :tile_y=>nil, :tile_w=>nil, :tile_h=>nil, :flip_horizontally=>nil, :flip_vertically=>nil, :angle_anchor_x=>nil, :angle_anchor_y=>nil, :id=>nil, :angle_x=>nil, :angle_y=>nil, :z=>nil, :source_x=>nil, :source_y=>nil, :source_w=>nil, :source_h=>nil, :blendmode_enum=>nil, :source_x2=>nil, :source_y2=>nil, :source_x3=>nil, :source_y3=>nil, :x2=>nil, :y2=>nil, :x3=>nil, :y3=>nil, :anchor_x=>nil, :anchor_y=>nil, :r2=>nil, :g2=>nil, :b2=>nil, :a2=>nil, :r3=>nil, :g3=>nil, :b3=>nil, :a3=>nil, :scale_quality_enum=>nil, :blendmode=>nil}
-#+end_src ~Mob#inspect~
+Keep in mind that ~$gtk.reset~ doesn't stop the rest of your ~tick~ method from being invoked.
 
-** Did you mean?
-Here's a list of methods that kind of look like :wander_unblocked.
-*** :wander_behavior
-*** :wander
-*** :wandering?
+You may have attempted to interact with properties on ~args.state~ that no longer have a value.
 
-The method named
-  :wander_unblocked
-doesn't exist on [Mob, #<Class:#<Mob:0xb13dc1670>>, AttrSprite, AttrRect, Animatable, Switchboard].
+There are a few ways to fix exceptions that fall into this category:
 
-(suggestions above)
+1. Wherever you are using ~$gtk.reset~ within ~tick~, replace
+   with ~$gtk.reset_next_tick~ (this function will tell DragonRuby to
+   reset on the next frame before invoking your ~tick~ method).
+2. Anywhere you are using ~$gtk.reset~, immediately set default values for
+   properties on ~args.state~ that are needed to complete the execution
+   of the rest of your ~tick~ function successfully.
+3. Do not use ~$gtk.reset~ and instead create a function that reinitializes your game
+   and ensures it has a consistent/valid state.
+
+   Take a look at the following sample apps for insights on how to do this:
+   - =./samples/99_genre_boss_battle/boss_battle_game_jam/app/main.rb=
+   - =./samples/99_genre_platformer/shadows/app/main.rb=
+
+** NOTE:
+The options above are ordered by quickest to implement (but probably not
+bulletproof), to more work to implement (but a better design long term).
+
+* EXCEPTION THROWN:
+* ERROR:
+{:x=>20, :y=>660, :w=>110.0, :h=>20, :r=>90, :g=>180, :b=>255}
+
+I don't know how to use the above Hash with SDL's FFI. Please
+add a method on the object called ~primitive_marker~ that
+returns :solid, :sprite, :label, :line, or :border. If the object
+is a Hash, please add { primitive_marker: :PRIMITIVE_SYMBOL } to the Hash.
+
+
 ** Backtrace:
-*** lib/switchboard/machine.rb:120:in run_hooks
-*** lib/switchboard/machine.rb:101:in fire
-*** lib/switchboard/machine.rb:68:in block
-*** app/mob.rb:176:in move_x
-*** app/mob.rb:107:in wander_behavior
-*** app/mob.rb:92:in tick
-*** app/mob_spawner.rb:19:in update
-*** app/main.rb:31:in update
-*** app/main.rb:21:in tick
-*** app/main.rb:96:in tick
+
+* Backtrace ~$gtk.reset~ last invocation:
+

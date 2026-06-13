@@ -3,17 +3,20 @@ require 'app/camera'
 require 'app/player'
 require 'app/mob'
 require 'app/mob_spawner'
+require 'app/fragment'
+require 'app/fragment_spawner'
 
 module Main
   class Game
     attr_dr
-    attr_accessor :level, :camera, :player, :scene, :mob_spawner
+    attr_accessor :level, :camera, :player, :scene, :mob_spawner, :fragment_spawner
 
-    def initialize
+    def start
       create_level
       create_camera
       create_player
       create_mob_spawner
+      create_fragment_spawner
     end
 
     def tick
@@ -29,6 +32,7 @@ module Main
     def update
       player.tick(args)
       mob_spawner.update
+      fragment_spawner.update
       # args.state.mob.tick(args) if args.state.mob
       camera.resize_to_screen
       camera.follow(player, level)
@@ -44,6 +48,7 @@ module Main
       scene.sprites << level.tilemap
       mob_spawner.render(scene)
       scene.sprites << player.animation_sprite
+      fragment_spawner.render(scene)
 
       # scene.debug << level.debug_int_grid do |debug|
       #  debug.int_grid 'Collisions', type: :solid, color: [255, 0, 0]
@@ -51,6 +56,7 @@ module Main
       # end
 
       outputs.sprites << camera.viewport_for(:scene)
+      render_progress_bar(Grid.allscreen_left + 20, Grid.allscreen_bottom + 20)
     end
 
     private
@@ -81,6 +87,14 @@ module Main
       self.player = level.entity('Player')
     end
 
+    def create_fragment_spawner
+      self.fragment_spawner = begin
+        fs = FragmentSpawner.new
+        fs.args = args
+        fs
+      end
+    end
+
     def create_mob_spawner
       self.mob_spawner = begin
         ms = MobSpawner.new(world: level, player: player)
@@ -88,11 +102,39 @@ module Main
         ms
       end
     end
+
+    def render_progress_bar(x, y, max: 20, w: 200, h: 20)
+      current = player.fragments_collected
+      ratio = max.zero? ? 0 : current.fdiv(max)
+      text = "#{current}/#{max}"
+      cx = x + w / 2
+      cy = y + h / 2
+
+      # dark track so the fill contrasts
+      args.outputs.sprites << { x: x, y: y, w: w, h: h, r: 20, g: 25, b: 35, path: :solid }
+      # light blue fill
+      args.outputs.sprites << { x: x, y: y, w: (w * ratio).to_i, h: h, r: 90, g: 180, b: 255, path: :solid }
+      # bright border
+      args.outputs.borders << { x: x, y: y, w: w, h: h, r: 220, g: 230, b: 245 }
+      # label
+      args.outputs.labels << { x: cx + 1, y: cy - 1, text: text, size_enum: 2,
+                               alignment_enum: 1, vertical_alignment_enum: 1,
+                               r: 0, g: 0, b: 0 }
+      # text
+      args.outputs.labels << { x: cx, y: cy, text: text, size_enum: 2,
+                               alignment_enum: 1, vertical_alignment_enum: 1,
+                               r: 255, g: 255, b: 255 }
+    end
   end
 
-  def tick(args)
+  def start(args)
     $game ||= Game.new
     $game.args = args
+    $game.start
+    args.state.game = $game
+  end
+
+  def tick
     $game.tick
   end
 end

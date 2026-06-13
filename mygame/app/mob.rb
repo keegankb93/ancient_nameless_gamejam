@@ -68,7 +68,6 @@ class Mob
 
   def initialize(level:, x: 200, y: 100, w: 32, h: 32)
     @level = level
-    @neighbors = []
     @x = x
     @y = y
     @w = w
